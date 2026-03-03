@@ -19,8 +19,11 @@ import asyncio
 import multiprocessing
 
 def agent_process(message, return_dict):
-    from agentest import run_orchestrator
-    result = run_orchestrator(message)
+    #from agentest import run_orchestrator
+    #result = run_orchestrator(message)
+
+    from googleform import run_agent
+    result = run_agent(message)
     return_dict["result"] = result
 
 @app.post("/api/chat")

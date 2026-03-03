@@ -101,6 +101,8 @@ Open this google form https://docs.google.com/forms/d/e/1FAIpQLSeIIOkuFqPagjWMam
 """
 I want you to open the following google form: https://docs.google.com/forms/d/e/1FAIpQLSdilm5f2e31TXguYONDLVpSNXBBcZTMViiigjKrV76uCA9mzA/viewform?usp=dialog and fill the form. Please upload the resume and ensure all required fiels are filled. Make sure all the pages are checked and finally submit the form.
 """
+
+"""
 while True:
     user_input = input("YOU: ")
     if user_input.lower() == 'exit':
@@ -109,3 +111,11 @@ while True:
     response = agent.run(user_input=user_input)
     logger.info(f"Response: {response}")
     print("AGENT:", response['final_response'])
+"""
+
+def run_agent(message: str):
+    try:
+        response = agent.run(user_input=message)
+        return response.get("final_response", "No response")
+    except Exception as e:
+        return f"Agent Error: {str(e)}"
