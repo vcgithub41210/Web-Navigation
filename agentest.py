@@ -14,36 +14,15 @@ from Navigation.Tools.Models.element import ElementStore
 from agent_pipeline.utils.logger import Logger
 from Navigation.DomMemoryManager import DOMAwareMemoryManager
 
-# --- CONFIGURATION ---
-USER_CONTEXT = {
-    "name": "Sudheer Nandhan",
-    "phone": "7874134312",
-    "phone_country_code": "India (+91)",
-    "email": "mainproject3563@gmail.com",
-    "current_location": "Kerala, India",
-    "willing_to_relocate": "Yes",
-    "total_experience_years": "0", 
-    "current_ctc": "0",
-    "expected_ctc": "1000000",
-    "notice_period_months": "0",
-    "skills": ["Python", "Java", "AWS", "Azure", "GCP", "Git", "Machine Learning"]
-}
-
-# --- INITIALIZATION ---
 session = BrowserManager(headless=False)
 navigation_tools = NavigationTools(session)
 element_store = ElementStore()
 perception_tools = PerceptionTools(session, element_store)
-action_tools = ActionTools(session, element_store, perception_tools, file_path="Resume.pdf")
 job_tools = LinkedInTools(element_store)
 logger = Logger()
 
-# Load Resume Context
 resume_text = parse_resume("Resume.pdf")
 
-# --- PROMPTS ---
-
-# 1. WORKER AGENT PROMPT (The "Doer")
 WORKER_PROMPT = """
 You are a specialized Job Application Worker. Your ONLY goal is to apply to the currently selected job.
 
@@ -65,7 +44,6 @@ You are a specialized Job Application Worker. Your ONLY goal is to apply to the 
 - If you see "Please enter a valid answer", check for skipped required fields.
 """
 
-# 2. ORCHESTRATOR AGENT PROMPT (The "Boss")
 ORCHESTRATOR_PROMPT = """
 You are the Headhunter Orchestrator. You control the browser to find jobs and assign them to Workers.
 
@@ -86,66 +64,58 @@ You are the Headhunter Orchestrator. You control the browser to find jobs and as
 6. Stop when you have attempted 5 applications.
 """
 
-# --- HELPER FUNCTIONS ---
 
-def reset_ui():
+def reset_ui(action_tools_instance):
     """
     Cleanup function to close any lingering modals before the next agent starts.
     This prevents the 'infinite loop' of agents getting stuck on the previous job's popup.
     """
     print("--- [SYSTEM] Cleaning UI State ---")
     try:
-        # Refresh snapshot to see if a modal is open
         perception_tools.take_snapshot()
         
-        # Look for a "Dismiss" or "Close" button (Usually an SVG or button with 'Dismiss' text)
-        # This is a heuristic; you might need to adjust based on specific IDs found in your DOM
         targets = [el.id for el in element_store.all() if "Dismiss" in (el.name or "") or "Close" in (el.name or "")]
         
         if targets:
             print(f"Closing lingering modal (IDs: {targets})")
-            action_tools.click_elements([targets[0]]) # Click the first one found
+            action_tools_instance.click_elements([targets[0]]) 
             time.sleep(1)
             
-            # Check for "Discard" confirmation popup
             perception_tools.take_snapshot()
             discard_targets = [el.id for el in element_store.all() if "Discard" in (el.name or "")]
             if discard_targets:
-                action_tools.click_elements([discard_targets[0]])
+                action_tools_instance.click_elements([discard_targets[0]])
                 time.sleep(1)
     except Exception as e:
         print(f"UI Reset warning: {e}")
 
-# --- CUSTOM TOOL WRAPPER ---
 
-def apply_to_job_wrapper(job_id: str, job_title: str) -> str:
+def apply_to_job_wrapper(job_id: str, job_title: str, user_context: dict, action_tools_instance) -> str:
     """
     Spawns a Worker Agent to handle the specific application logic for one job.
     """
     print(f"\n >>> [ORCHESTRATOR] Delegating Job: {job_title} (ID: {job_id})")
     
-    # 1. Click the job listing to load the details pane
-    action_tools.click_elements([job_id])
-    time.sleep(3) # Give LinkedIn time to load the right pane
+    action_tools_instance.click_elements([job_id])
+    time.sleep(3) 
     
-    # 2. Create the specialized Worker Agent
-    # We create a fresh instance so it has clean memory
     worker_agent = Agent(
         llm_client=GeminiClient(), 
         tools=[
             perception_tools.take_snapshot,
-            action_tools.click_elements,
-            action_tools.type_in_elements,
-            action_tools.upload_file
+            action_tools_instance.click_elements,
+            action_tools_instance.type_in_elements,
+            action_tools_instance.upload_file
         ],
-        system_prompt=WORKER_PROMPT.format(user_context=json.dumps(USER_CONTEXT)),
+
+        system_prompt=WORKER_PROMPT.format(user_context=json.dumps(user_context)),
         max_steps=20, # Give it enough room for multi-page forms
         reasoning=True,
         show_thinking=True,
         memory_manager=DOMAwareMemoryManager(history_window=8, scratchpad_window=10)
     )
+    print(user_context)
     
-    # 3. Run the Worker
     try:
         result = worker_agent.run(f"Apply to the job: {job_title}")
         status = result.get('final_response', 'No response')
@@ -154,55 +124,47 @@ def apply_to_job_wrapper(job_id: str, job_title: str) -> str:
     
     print(f" <<< [WORKER FINISHED] Result: {status}")
     
-    # 4. Mandatory Cleanup
-    reset_ui()
+    reset_ui(action_tools_instance)
     
     return status
 
-# --- MAIN EXECUTION ---
 
-# Define tools available to the Orchestrator
-orchestrator_tools = [
-    navigation_tools.open_page,
-    perception_tools.take_snapshot,
-    action_tools.type_in_elements, 
-    action_tools.click_elements, # Needed to click the "Easy Apply" filter
-    job_tools.get_job_posting_ids,
-    apply_to_job_wrapper # The Delegator Tool
-]
-
-# Create the Orchestrator Agent
-orchestrator = Agent(
-    llm_client=GeminiClient(),
-    tools=orchestrator_tools,
-    system_prompt=ORCHESTRATOR_PROMPT,
-    max_steps=15, # Orchestrator needs fewer steps than workers
-    reasoning=True,
-    show_thinking=True
-)
-
-
-
-# if __name__ == "__main__":
+def run_orchestrator(message: str, user_context: dict, resume_path: str):
     
-#     while True:
-#         user_input = input("YOU: ")
-#         if user_input.lower() == 'exit':
-#             break
-    
-#         try:
-#             response = orchestrator.run(user_input=user_input)
-#             logger.info(f"Response: {response}")
-#             print("AGENT:", response['final_response'])
-#         except KeyboardInterrupt:
-#             print("Stopped by user.")
-
-
-
-def run_orchestrator(message: str):
     try:
+        action_tools_instance = ActionTools(
+            session, 
+            element_store, 
+            perception_tools, 
+            file_path=resume_path
+        )
+        
+        def apply_to_job_wrapper_with_context(job_id: str, job_title: str) -> str:
+            return apply_to_job_wrapper(job_id, job_title, user_context, action_tools_instance)
+        
+        orchestrator_tools = [
+            navigation_tools.open_page,
+            perception_tools.take_snapshot,
+            action_tools_instance.type_in_elements, 
+            action_tools_instance.click_elements,
+            job_tools.get_job_posting_ids,
+            apply_to_job_wrapper_with_context 
+        ]
+        
+        orchestrator = Agent(
+            llm_client=GeminiClient(),
+            tools=orchestrator_tools,
+            system_prompt=ORCHESTRATOR_PROMPT,
+            max_steps=15,
+            reasoning=True,
+            show_thinking=True
+        )
+        
+        print(f"[Orchestrator] Starting with user: {user_context.get('name', 'Unknown')}")
         response = orchestrator.run(user_input=message)
         return response.get("final_response", "No response")
+        
     except Exception as e:
-        return f"Agent Error: {str(e)}"
-    
+        error_msg = f"Agent Error: {str(e)}"
+        print(f"[Orchestrator] ERROR: {error_msg}")
+        return error_msg

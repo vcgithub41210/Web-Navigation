@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile, getRedirectResult, signInWithRedirect } from 'firebase/auth';
 import { auth, db, storage } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadResumeToSupabase } from '@/lib/supabase';
 import { Mail, Lock, User, Upload, Loader, Chrome, FileUp } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -67,12 +67,17 @@ export default function RegisterPage() {
         displayName: formData.fullName
       });
 
-      // Upload resume if provided
+      // Upload resume to SUPABASE if provided
       let resumeURL = '';
       if (resume) {
-        const storageRef = ref(storage, `resumes/${newUser.uid}/${resume.name}`);
-        await uploadBytes(storageRef, resume);
-        resumeURL = await getDownloadURL(storageRef);
+        try {
+          // Upload to Supabase at: resume_bucket/{firebase_uid}/resume.pdf
+          resumeURL = await uploadResumeToSupabase(resume, newUser.uid);
+        } catch (uploadErr: any) {
+          console.error('Resume upload failed:', uploadErr);
+          setError('Account created but resume upload failed. Please upload in settings.');
+          // Continue anyway - user can upload later in settings
+        }
       }
 
       // Create user profile in Firestore
@@ -82,7 +87,7 @@ export default function RegisterPage() {
         displayName: formData.fullName,
         jobTitle: formData.jobTitle,
         about: formData.about,
-        resumeURL: resumeURL,
+        resumeURL: resumeURL, // Now contains Supabase URL
         createdAt: new Date(),
         updatedAt: new Date()
       });
