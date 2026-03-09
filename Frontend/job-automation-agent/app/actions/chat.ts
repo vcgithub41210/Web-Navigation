@@ -1,5 +1,6 @@
 export interface ChatRequest {
   message: string;
+  user_id: string;
 }
 
 export interface ChatResponse {
@@ -12,7 +13,8 @@ const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export async function sendChatMessage(
-  message: string
+  message: string,
+  userId: string
 ): Promise<string> {
   try {
     const response = await fetch(`${BACKEND_URL}/api/chat`, {
@@ -22,6 +24,7 @@ export async function sendChatMessage(
       },
       body: JSON.stringify({
         message,
+        user_id: userId,
       } as ChatRequest),
     });
 

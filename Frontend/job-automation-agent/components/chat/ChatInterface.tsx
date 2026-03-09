@@ -5,6 +5,7 @@ import { Send, Plus, Paperclip } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
 import { ThinkingAnimation } from './ThinkingAnimation';
 import { sendChatMessage } from '@/app/actions/chat';
+import { useAuth } from '@/context/AuthContext';
 
 interface Message {
   id: string;
@@ -15,6 +16,7 @@ interface Message {
 }
 
 export function ChatInterface() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -67,7 +69,10 @@ export function ChatInterface() {
       let response = '';
 
       try {
-        response = await sendChatMessage(userMessage.content);
+        if (!user) {
+          throw new Error('Please log in to use the chat.');
+        }
+        response = await sendChatMessage(userMessage.content, user.uid); // PASS user.uid
       } catch (error: any) {
         console.error('Backend error:', error);
         response = 'Sorry, the server is currently unavailable. Please try again.';
