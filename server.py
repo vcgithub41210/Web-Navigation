@@ -17,12 +17,11 @@ class ChatRequest(BaseModel):
     message: str
     user_id: str
 
-
 def agent_process(message, user_id, return_dict):
     """
     Process agent request with dynamic user context from resume.
+    Routes between LinkedIn Automation and Google Form Automation based on the prompt.
     """
-    from agentest import run_orchestrator
     from utils.supabase_manager import download_resume, delete_temp_resume
     from utils.user_context_extractor import extract_user_context
     
@@ -35,9 +34,18 @@ def agent_process(message, user_id, return_dict):
         print(f"[Server] Extracting user context from resume")
         user_context = extract_user_context(resume_path)
         
-        print(f"[Server] Running orchestrator with user context")
-        result = run_orchestrator(message, user_context, resume_path)
+        print(f"[Server] Running agent with user context")
         
+        # Simple routing based on the message content
+        if "google.com/forms" in message.lower() or "google form" in message.lower():
+            print("[Server] Routing to Google Forms Agent")
+            from googleform import run_agent
+            result = run_agent(message, user_context, resume_path)
+        else:
+            print("[Server] Routing to LinkedIn Orchestrator")
+            from agentest import run_orchestrator
+            result = run_orchestrator(message, user_context, resume_path)
+            
         return_dict["result"] = result
         return_dict["error"] = None
         
@@ -49,6 +57,7 @@ def agent_process(message, user_id, return_dict):
         
     finally:
         if resume_path:
+            print(f"[Server] Cleaning up temporary resume file: {resume_path}")
             delete_temp_resume(resume_path)
 
 
