@@ -7,11 +7,7 @@ class LinkedInTools:
 
     def get_job_posting_ids(self, limit: int = 10) -> List[Dict[str, str]]:
         """
-        Filters the current element store to find IDs for job postings.
-        Returns a list of dictionaries containing the ID and the job title.
-        
-        Args:
-            limit (int): The maximum number of job IDs to return.
+        Returns a pool of available job postings from the current page.
         """
         all_elements = self.element_store.all()
         job_postings = []
@@ -29,4 +25,6 @@ class LinkedInTools:
                     "job_title": el.name
                 })
 
-        return job_postings[:limit]
+        
+        pool_size = max(limit, 10)
+        return job_postings[:pool_size]

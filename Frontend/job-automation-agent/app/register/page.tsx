@@ -87,7 +87,9 @@ export default function RegisterPage() {
         displayName: formData.fullName,
         jobTitle: formData.jobTitle,
         about: formData.about,
-        resumeURL: resumeURL, // Now contains Supabase URL
+        resumeURL: resumeURL,
+        jobsAppliedCount: 0,
+        appliedJobs: [],
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -119,6 +121,8 @@ export default function RegisterPage() {
       about: '',
       resumeURL: '',
       provider: 'google',
+      jobsAppliedCount: 0,
+      appliedJobs: [],
       createdAt: new Date(),
       updatedAt: new Date()
     }, { merge: true });

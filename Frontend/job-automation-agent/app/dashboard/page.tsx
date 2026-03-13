@@ -42,7 +42,7 @@ export default function DashboardPage() {
         
         <main className="flex-1 overflow-hidden">
           <div className="h-full flex flex-col p-6">
-            <div className="flex-1">
+            <div className="flex-1 min-h-0">
               <ChatInterface />
             </div>
           </div>

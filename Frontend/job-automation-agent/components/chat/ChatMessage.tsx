@@ -11,6 +11,27 @@ interface ChatMessageProps {
   timestamp?: Date;
 }
 
+function renderContent(text: string) {
+  // Split into paragraphs on blank lines, then handle inline bold
+  return text.split('\n').map((line, i) => {
+    // Render **bold** spans
+    const parts = line.split(/(\*\*[^*]+\*\*)/g);
+    const rendered = parts.map((part, j) =>
+      part.startsWith('**') && part.endsWith('**') ? (
+        <strong key={j}>{part.slice(2, -2)}</strong>
+      ) : (
+        part
+      )
+    );
+    return (
+      <React.Fragment key={i}>
+        {rendered}
+        {i < text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    );
+  });
+}
+
 export function ChatMessage({ role, content, isThinking, timestamp }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
 
@@ -24,7 +45,7 @@ export function ChatMessage({ role, content, isThinking, timestamp }: ChatMessag
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={`max-w-sm lg:max-w-md xl:max-w-lg ${isUser ? 'flex-row-reverse' : ''} flex gap-3`}>
+      <div className={`${isUser ? 'max-w-[75%]' : 'max-w-[85%]'} ${isUser ? 'flex-row-reverse' : ''} flex gap-3`}>
         {/* Avatar */}
         <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
           isUser 
@@ -54,7 +75,7 @@ export function ChatMessage({ role, content, isThinking, timestamp }: ChatMessag
                 ? 'bg-primary text-primary-foreground' 
                 : 'bg-card/80 border border-border/40 text-foreground'
             }`}>
-              {content}
+              {isUser ? content : renderContent(content)}
             </div>
           )}
 

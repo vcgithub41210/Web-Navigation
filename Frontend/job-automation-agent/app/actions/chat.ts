@@ -43,7 +43,43 @@ export async function sendChatMessage(
 
     return data.reply;
   } catch (error) {
-    console.error("[Frontend] Chat request failed:", error);
+    console.error("[Frontend] Auto-apply chat request failed:", error);
+    throw error;
+  }
+}
+
+export async function sendCustomFormMessage(
+  message: string,
+  userId: string
+): Promise<string> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/customform`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message,
+        user_id: userId,
+      } as ChatRequest),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Backend error (${response.status}): ${errorText}`
+      );
+    }
+
+    const data: ChatResponse = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data.reply;
+  } catch (error) {
+    console.error("[Frontend] Custom form request failed:", error);
     throw error;
   }
 }

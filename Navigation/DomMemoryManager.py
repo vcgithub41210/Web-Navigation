@@ -19,9 +19,7 @@ class DOMAwareMemoryManager(SlidingWindowMemory):
         print(entry)
         print("\n\n")
 
-        # Matches 'elements:' followed by space OR newline, capturing everything after
         snapshot_pattern = r"(Observation \d+:.*?(?:Success|Error).*?)(elements:[\s\n]+)(.*)"
-       # snapshot_pattern = r"(Observation \d+:.*?(?:Success|Error).*?)(elements:\s*\n)(.*)"
     
         navigation_pattern = r"(.*observation.*?IDs reset\..*?)(elements:\\n)(.*)"
         

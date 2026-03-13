@@ -1,136 +1,3 @@
-# from nav2.Browser.manager import BrowserManager
-# from nav2.Tools.Models.element import ElementStore
-# from nav2.normalization.normalize_actions import _normalize_actions, _normalize_ids
-# from nav2.Tools.ToolHelpers.action_helper import _observe_and_report
-# from nav2.Tools.perception import PerceptionTools 
-# import time
-# import random
-
-# class ActionTools:
-#     def __init__(
-#         self, 
-#         session: BrowserManager, 
-#         element_store: ElementStore,
-#         perception_tools: PerceptionTools  
-#     ):
-#         self.session = session
-#         self.element_store = element_store
-#         self.perception = perception_tools 
-
-
-#     def click_elements(self, element_ids: list[str]):
-#         """
-#             Clicks on a list of web elements identified by their unique IDs.
-#             Args:
-#                 element_ids (list[str]): A list of EXACT integer IDs found by the perception agent.
-#                                         Example: ['12', '45', '88']
-#         """
-#         try:
-#             page = self.session.get_page()
-#             results = []
-#             element_ids = _normalize_ids(element_ids)
-#             wait_range = (0.3, 0.8)
-
-#             for element_id in element_ids:
-#                 try:
-#                     element = self.element_store.get(element_id)
-#                     if not element:
-#                         raise ValueError(f"Element ID '{element_id}' not found.")
-
-#                     locator = page.locator(element.selector).first
-#                     locator.wait_for(state="visible", timeout=3000)
-#                     locator.scroll_into_view_if_needed()
-#                     locator.click(timeout=60000)
-
-#                     time.sleep(random.uniform(*wait_range))
-#                     results.append({"element_id": element_id, "status": "ok"})
-
-#                 except Exception as e:
-#                     results.append({
-#                         "element_id": element_id,
-#                         "status": "error",
-#                         "reason": str(e)
-#                     })
-
-#             base_result = {
-#                 "status": "partial" if any(r["status"] == "error" for r in results) else "ok",
-#                 "results": results
-#             }
-
-#             print(_observe_and_report(base_result, self.perception))
-
-#             return _observe_and_report(base_result, self.perception)
-
-#         except Exception as e:
-#             return {"status": "error", "reason": str(e)}
-        
-#     def type_in_elements(self, actions: list[dict]):
-#         """
-#         Types text into specified fields.
-#         Args:
-#             actions (list[dict]): [{"element_id": "5", "text": "John"}]
-#         """
-
-#         try:
-#             page = self.session.get_page()
-#             results = []
-
-#             actions = _normalize_actions(actions)
-#             typing_delay_range = (50, 120)
-#             field_wait_range = (0.4, 1.0)
-
-#             for action in actions:
-#                 time.sleep(0.5)
-#                 element_id = action.get("element_id", "UNKNOWN")
-
-#                 try:
-#                     if "element_id" not in action or "text" not in action:
-#                         raise ValueError("Action missing 'element_id' or 'text'")
-
-#                     text = action["text"]
-#                     element = self.element_store.get(element_id)
-
-#                     if not element:
-#                         raise ValueError(f"Element ID '{element_id}' not found in store.")
-
-#                     locator = page.locator(element.selector).first
-#                     locator.wait_for(state="visible", timeout=60000)
-#                     locator.scroll_into_view_if_needed()
-
-#                     # Focus field
-#                     locator.click()
-#                     time.sleep(random.uniform(0.1, 0.3))
-
-#                     # Clear and type
-#                     locator.fill("")
-#                     locator.type(text, delay=random.randint(*typing_delay_range))
-
-#                     time.sleep(random.uniform(*field_wait_range))
-
-#                     results.append({
-#                         "element_id": element_id,
-#                         "status": "ok"
-#                     })
-
-#                 except Exception as e:
-#                     results.append({
-#                         "element_id": element_id,
-#                         "status": "error",
-#                         "reason": str(e)
-#                     })
-
-#             base_result = {
-#                 "status": "partial" if any(r["status"] == "error" for r in results) else "ok",
-#                 "results": results
-#             }
-
-#             print(_observe_and_report(base_result, self.perception))
-
-#             return _observe_and_report(base_result, self.perception)
-
-#         except Exception as e:
-#             return {"status": "error", "reason": str(e)}
-
 from Navigation.Browser.manager import BrowserManager
 from Navigation.Tools.Models.element import ElementStore
 from Navigation.normalization.normalize_actions import _normalize_actions, _normalize_ids
@@ -147,89 +14,6 @@ class ActionTools:
         self.perception = perception_tools
         self.file_path = file_path 
 
-    # def click_elements(self, element_ids: list[str]):
-    #     """
-    #         Clicks on a list of web elements identified by their unique IDs.
-    #     """
-    #     results = []
-    #     try:
-    #         page = self.session.get_page()
-    #         for eid in element_ids:
-    #             try:
-    #                 el = self.element_store.get(eid)
-    #                 if not el: raise ValueError(f"ID {eid} not found")
-    #                 loc = page.locator(el.selector).first
-    #                 loc.wait_for(state="visible", timeout=3000)
-    #                 loc.click(timeout=5000)
-    #                 results.append({"element_id": eid, "status": "ok"})
-    #             except Exception as e: results.append({"element_id": eid, "status": "error", "reason": str(e)})
-            
-    #         base = {"status": "partial" if any(r["status"]=="error" for r in results) else "ok", "results": results}
-    #         time.sleep(3)
-    #         return _observe_and_report(base, self.perception)
-    #     except Exception as e: return {"status": "error", "reason": str(e)}
-
-#
-#    def click_elements(self, element_ids: list[str]):
-#        """
-#        Clicks on a list of web elements identified by their unique IDs.
-#        """
-#        results = []
-#        try:
-#            page = self.session.get_page()
-#            
-#            for eid in element_ids:
-#                try:
-#                    el = self.element_store.get(eid)
-#                    if not el: 
-#                        raise ValueError(f"ID {eid} not found")
-#
-#                    loc = page.locator(el.selector).first
-#
-#                    
-#                    if el.role == "option":
-#                        is_native_option = loc.evaluate("el => el.tagName === 'OPTION'")
-#                        
-#                        if is_native_option:
-#                            parent = loc.locator("xpath=..")
-#                            value_to_select = loc.get_attribute("value")
-#                            if value_to_select:
-#                                parent.select_option(value_to_select)
-#                            else:
-#                                text_content = loc.text_content()
-#                                parent.select_option(label=text_content)
-#                                
-#                            results.append({"element_id": eid, "status": "ok", "note": "selected_native_option"})
-#                            continue 
-#
-#                    loc.wait_for(state="visible", timeout=3000)
-#                    loc.scroll_into_view_if_needed()
-#                    loc.click(timeout=5000)
-#                    
-#                    results.append({"element_id": eid, "status": "ok"})
-#
-#                except Exception as e:
-#                    print(e)
-#                    if "resolved to hidden" in str(e) and el.role == "option":
-#                        try:
-#                            print(f"Force clicking hidden custom option {eid}...")
-#                            loc.dispatch_event("click")
-#                            results.append({"element_id": eid, "status": "ok", "note": "force_clicked_hidden"})
-#                            continue
-#                        except:
-#                            print(e)
-#                            pass
-#                    
-#                    results.append({"element_id": eid, "status": "error", "reason": str(e)})
-#            
-#            base = {"status": "partial" if any(r["status"]=="error" for r in results) else "ok", "results": results}
-#            time.sleep(1) 
-#            return _observe_and_report(base, self.perception)
-#
-#        except Exception as e: 
-#            print(e)
-#            return {"status": "error", "reason": str(e)}
-#
     def click_elements(self, element_ids: list[str]):
         """
         Clicks on a list of web elements identified by their unique IDs.
@@ -245,7 +29,7 @@ class ActionTools:
 
                     loc = page.locator(el.selector).first
 
-                    # 1. Handle Native Select Options (Keep your existing logic)
+                    
                     if el.role == "option":
                         is_native = loc.evaluate("el => el.tagName === 'OPTION'")
                         if is_native:
@@ -256,22 +40,18 @@ class ActionTools:
                             results.append({"element_id": eid, "status": "ok", "note": "native_select"})
                             continue
 
-                    # 2. Try Standard Interaction
                     try:
-                        # Lower timeout to fail faster if blocked
                         loc.scroll_into_view_if_needed()
                         loc.click(timeout=2000) 
                         results.append({"element_id": eid, "status": "ok"})
                     
                     except Exception as e:
-                        # 3. Fallback: Force Click (Fixes "intercepts pointer events")
                         print(f"Standard click failed for {eid}: {e}. Retrying with FORCE...")
                         try:
                             loc.click(force=True, timeout=2000)
                             results.append({"element_id": eid, "status": "ok", "note": "force_clicked"})
                         
                         except Exception as e2:
-                            # 4. Final Fallback: JS Dispatch (Fixes "resolved to hidden")
                             print(f"Force click failed for {eid}: {e2}. Dispatching JS click...")
                             loc.dispatch_event("click")
                             results.append({"element_id": eid, "status": "ok", "note": "js_dispatched"})

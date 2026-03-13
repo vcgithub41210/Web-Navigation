@@ -107,3 +107,6 @@ openrouter_log.txt
 sample_upload.txt
 profile/
 .DS_Store
+
+# Firebase service account key
+serviceAccountKey.json

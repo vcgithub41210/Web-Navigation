@@ -9,7 +9,7 @@ import {
   browserLocalPersistence
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 interface UserProfile {
   uid: string;
@@ -19,6 +19,8 @@ interface UserProfile {
   resumeURL?: string;
   jobTitle?: string;
   about?: string;
+  jobsAppliedCount?: number;
+  appliedJobs?: any[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -39,23 +41,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set persistence to local
     setPersistence(auth, browserLocalPersistence).catch(console.error);
 
-    // Subscribe to auth state
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       
       if (currentUser) {
-        // Create profile from Firebase Auth data
-        // Firestore profile will be created on first register/settings update
         const defaultProfile: UserProfile = {
           uid: currentUser.uid,
           email: currentUser.email || '',
           displayName: currentUser.displayName || '',
-          photoURL: currentUser.photoURL || ''
+          photoURL: currentUser.photoURL || '',
+          jobsAppliedCount: 0,
+          appliedJobs: [],
         };
-        
+
+        // Ensure job-tracking fields exist for existing users
+        try {
+          const userRef = doc(db, 'users', currentUser.uid);
+          const snap = await getDoc(userRef);
+          if (snap.exists()) {
+            const data = snap.data();
+            const missing: Record<string, any> = {};
+            if (data.jobsAppliedCount === undefined) missing.jobsAppliedCount = 0;
+            if (data.appliedJobs === undefined) missing.appliedJobs = [];
+            if (Object.keys(missing).length > 0) {
+              await updateDoc(userRef, missing);
+            }
+          }
+        } catch (err) {
+          console.warn('[AuthContext] Could not check job tracking fields:', err);
+        }
+
         setUserProfile(defaultProfile);
       } else {
         setUserProfile(null);
@@ -91,3 +108,4 @@ export function useAuth() {
   }
   return context;
 }
+
