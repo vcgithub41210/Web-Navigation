@@ -30,8 +30,9 @@ export function DashboardSidebar() {
   const navItems = [
     { icon: MessageSquare, label: 'Chat Agent', href: '/dashboard', section: 'chat' },
     { icon: FileText, label: 'Applications', href: '/dashboard/applications', section: 'applications' },
-    { icon: Zap, label: 'Quick Apply', href: '/dashboard/quick-apply', section: 'quick' },
-    { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics', section: 'analytics' },
+    //not important
+    // { icon: Zap, label: 'Quick Apply', href: '/dashboard/quick-apply', section: 'quick' },
+    // { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics', section: 'analytics' },
     { icon: Settings, label: 'Settings', href: '/dashboard/settings', section: 'settings' },
   ];
 
@@ -59,7 +60,11 @@ export function DashboardSidebar() {
         })}
       </nav>
 
-      {/* Stats */}
+      {/* FUTURE IMPLEMENTATION: 
+      stats to show current number of applications given by the user
+      response rate (i dont know what that is) 
+      */}
+      {/* 
       <div className="border-t border-border/40 pt-4 space-y-3">
         <div className="p-3 rounded-lg bg-card/50 border border-border/40">
           <p className="text-xs text-foreground/60 mb-1">Applications</p>
@@ -72,6 +77,7 @@ export function DashboardSidebar() {
           <p className="text-2xl font-bold text-accent">68%</p>
         </div>
       </div>
+      */}
     </aside>
   );
 }

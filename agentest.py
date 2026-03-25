@@ -2,7 +2,6 @@ import time
 import json
 import re
 from test.linkedin import LinkedInTools
-from test.resumeParser import parse_resume
 from agent_pipeline.Agent.Agent import Agent
 from agent_pipeline.Agent.Clients.GithubClient import GitHubModelsClient
 from agent_pipeline.Agent.Clients.GeminiClient import GeminiClient 
@@ -21,7 +20,6 @@ perception_tools = PerceptionTools(session, element_store)
 job_tools = LinkedInTools(element_store)
 logger = Logger()
 
-resume_text = parse_resume("Resume.pdf")
 
 WORKER_PROMPT = """
 You are a specialized Job Application Worker. Your ONLY goal is to apply to the currently selected job.
