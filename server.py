@@ -178,23 +178,17 @@ async def chat(request: ChatRequest):
         print(f"[Server] /api/chat error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-def custom_form_process(message, user_id, return_dict):
+
+def custom_form_process(message, return_dict):
     """
     Process custom-form agent request.
     Returns the agent's actual final response (success / failure message).
     """
     from googleform import run_agent
-    from utils.supabase_manager import download_resume, delete_temp_resume
 
-    resume_path = None
     try:
-        print(f"[Server] Downloading resume for custom form: {user_id}")
-        resume_path = download_resume(user_id)
-
         print(f"[Server] Running custom form agent")
-        # Pass the dynamic resume_path to your agent
-        result = run_agent(message, resume_path) 
-        
+        result = run_agent(message)
         return_dict["result"] = result if result else "Form agent returned no response."
         return_dict["error"] = None
 
@@ -207,12 +201,6 @@ def custom_form_process(message, user_id, return_dict):
         print(f"[Server] ERROR: {error_msg}")
         return_dict["result"] = f"Form filling failed: {error_msg}"
         return_dict["error"] = error_msg
-        
-    finally:
-        # Ensure the temp file gets deleted just like in agent_process
-        if resume_path:
-            print(f"[Server] Cleaning up temporary resume file: {resume_path}")
-            delete_temp_resume(resume_path)
 
 
 @app.post("/api/customform")
@@ -230,8 +218,7 @@ async def custom_form(request: CustomFormRequest):
 
         p = multiprocessing.Process(
             target=custom_form_process,
-            # Add request.user_id to the args tuple
-            args=(request.message, request.user_id, return_dict), 
+            args=(request.message, return_dict),
         )
 
         p.start()

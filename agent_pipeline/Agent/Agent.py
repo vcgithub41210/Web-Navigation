@@ -1,4 +1,3 @@
-import time
 import inspect
 import asyncio
 from typing import List, Optional
@@ -119,7 +118,7 @@ class Agent:
             current_format = DIRECT_INSTRUCTIONS
 
         for i in range(self.max_steps):
-            time.sleep(2) 
+            
             history_str = self.memory.get_context()
             current_scratchpad = self.memory.get_scratchpad()
             

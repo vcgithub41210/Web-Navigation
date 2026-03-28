@@ -1,31 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { MessageSquare, FileText, Zap, BarChart3, Settings } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { MessageSquare, FileText, Zap, BarChart3, Settings, ChevronDown } from 'lucide-react';
 
 export function DashboardSidebar() {
-  const { user } = useAuth();
   const [expandedSection, setExpandedSection] = useState<string | null>('applications');
-  const [jobsAppliedCount, setJobsAppliedCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    const fetchCount = async () => {
-      try {
-        const snap = await getDoc(doc(db, 'users', user.uid));
-        if (snap.exists()) {
-          setJobsAppliedCount(snap.data().jobsAppliedCount ?? 0);
-        }
-      } catch (e) {
-        console.warn('[Sidebar] Could not load job count:', e);
-      }
-    };
-    fetchCount();
-  }, [user]);
 
   const navItems = [
     { icon: MessageSquare, label: 'Chat Agent', href: '/dashboard', section: 'chat' },
@@ -62,10 +42,8 @@ export function DashboardSidebar() {
       {/* Stats */}
       <div className="border-t border-border/40 pt-4 space-y-3">
         <div className="p-3 rounded-lg bg-card/50 border border-border/40">
-          <p className="text-xs text-foreground/60 mb-1">Applications</p>
-          <p className="text-2xl font-bold text-primary">
-            {jobsAppliedCount === null ? '—' : jobsAppliedCount}
-          </p>
+          <p className="text-xs text-foreground/60 mb-1">Applications This Week</p>
+          <p className="text-2xl font-bold text-primary">12</p>
         </div>
         <div className="p-3 rounded-lg bg-card/50 border border-border/40">
           <p className="text-xs text-foreground/60 mb-1">Response Rate</p>
@@ -75,4 +53,3 @@ export function DashboardSidebar() {
     </aside>
   );
 }
-
