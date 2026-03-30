@@ -7,8 +7,8 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { Save, Upload, Mail, User, Briefcase, FileText, Trash2, Download } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db } from '@/lib/firebase';
+import { deleteResumeFromSupabase, uploadResumeToSupabase } from '@/lib/supabase';
 
 export default function SettingsPage() {
   const { user, userProfile, loading } = useAuth();
@@ -60,35 +60,27 @@ export default function SettingsPage() {
   setMessage('');
 
   try {
-    // Delete old resume if exists
+    // Best-effort cleanup of old Supabase resume before replacing it.
     if (formData.resumeURL) {
       try {
-        const oldRef = ref(storage, `resumes/${user.uid}/${formData.resumeFileName}`);
-        await deleteObject(oldRef).catch(() => {}); // Ignore if file missing
+        await deleteResumeFromSupabase(user.uid);
       } catch (e) {
         // Ignore
       }
     }
 
-    // Upload new resume
-    const storageRef = ref(storage, `resumes/${user.uid}/${file.name}`);
-    await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(storageRef);
+    // Upload new resume to Supabase and store its public URL.
+    const downloadURL = await uploadResumeToSupabase(file, user.uid);
 
-    // Save to Firestore (merge ensures other fields are safe)
-    await setDoc(
-      doc(db, 'users', user.uid),
-      {
-        resumeURL: downloadURL,
-        updatedAt: new Date()
-      },
-      { merge: true }
-    );
+    await updateDoc(doc(db, 'users', user.uid), {
+      resumeURL: downloadURL,
+      updatedAt: new Date()
+    });
 
     setFormData(prev => ({
       ...prev,
       resumeURL: downloadURL,
-      resumeFileName: file.name
+      resumeFileName: 'resume.pdf'
     }));
 
     setMessage('Resume uploaded successfully!');
@@ -105,23 +97,17 @@ const handleDeleteResume = async () => {
   try {
     setUploadingResume(true);
 
-    // Delete from Storage
+    // Delete from Supabase storage.
     try {
-      const fileRef = ref(storage, `resumes/${user.uid}/${formData.resumeFileName}`);
-      await deleteObject(fileRef).catch(() => {}); // Ignore if file missing
+      await deleteResumeFromSupabase(user.uid);
     } catch (e) {
       // Ignore
     }
 
-    // Remove from Firestore safely
-    await setDoc(
-      doc(db, 'users', user.uid),
-      {
-        resumeURL: '',
-        updatedAt: new Date()
-      },
-      { merge: true }
-    );
+    await updateDoc(doc(db, 'users', user.uid), {
+      resumeURL: '',
+      updatedAt: new Date()
+    });
 
     setFormData(prev => ({
       ...prev,
