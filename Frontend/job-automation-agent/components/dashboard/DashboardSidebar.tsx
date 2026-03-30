@@ -30,8 +30,7 @@ export function DashboardSidebar() {
   const navItems = [
     { icon: MessageSquare, label: 'Chat Agent', href: '/dashboard', section: 'chat' },
     { icon: FileText, label: 'Applications', href: '/dashboard/applications', section: 'applications' },
-    { icon: Zap, label: 'Quick Apply', href: '/dashboard/quick-apply', section: 'quick' },
-    { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics', section: 'analytics' },
+    // { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics', section: 'analytics' },
     { icon: Settings, label: 'Settings', href: '/dashboard/settings', section: 'settings' },
   ];
 
@@ -67,10 +66,12 @@ export function DashboardSidebar() {
             {jobsAppliedCount === null ? '—' : jobsAppliedCount}
           </p>
         </div>
+        {/*
         <div className="p-3 rounded-lg bg-card/50 border border-border/40">
           <p className="text-xs text-foreground/60 mb-1">Response Rate</p>
           <p className="text-2xl font-bold text-accent">68%</p>
         </div>
+        */}
       </div>
     </aside>
   );
